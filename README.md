@@ -1,1 +1,3 @@
-# calc
+My Hobbies
+
+Maths calculator with extra features
