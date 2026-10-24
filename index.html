@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maths Calculator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class' };
+</script>
+
+<style>
+  :root{
+    --bg:#F4F6F1;
+    --bg-grid:#DDE5D9;
+    --panel:#FFFFFF;
+    --panel-2:#FAFBF8;
+    --border:#DBE2D6;
+    --ink:#152018;
+    --ink-soft:#5A6B5F;
+    --ink-faint:#93A398;
+    --accent:#0E9C6E;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#E3F5EC;
+    --op:#B96A16;
+    --op-soft:#FBEBDA;
+    --danger:#C5432E;
+    --danger-soft:#FBE6E1;
+    --shadow: 0 1px 2px rgba(21,32,24,0.04), 0 8px 24px -12px rgba(21,32,24,0.12);
+  }
+  html.dark{
+    --bg:#0A130E;
+    --bg-grid:#152018;
+    --panel:#111C15;
+    --panel-2:#0D1712;
+    --border:#22322A;
+    --ink:#E9F3EC;
+    --ink-soft:#8FA697;
+    --ink-faint:#4F6259;
+    --accent:#37D999;
+    --accent-ink:#052014;
+    --accent-soft:rgba(55,217,153,0.10);
+    --op:#F2A93B;
+    --op-soft:rgba(242,169,59,0.10);
+    --danger:#FF6B5E;
+    --danger-soft:rgba(255,107,94,0.10);
+    --shadow: 0 1px 2px rgba(0,0,0,0.2), 0 12px 30px -14px rgba(0,0,0,0.6);
+  }
+
+  * { -webkit-tap-highlight-color: transparent; }
+
+  body{
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size: 26px 26px;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    transition: background-color .35s ease, color .35s ease;
+    min-height: 100vh;
+  }
+
+  .mono{ font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .panel{
+    background-color: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+
+  .surface{
+    background-color: var(--panel-2);
+    border: 1px solid var(--border);
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+
+  .btn-key{
+    background-color: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    transition: transform .08s ease, background-color .15s ease, border-color .15s ease;
+  }
+  .btn-key:hover{ border-color: var(--accent); background-color: var(--accent-soft); }
+  .btn-key:active{ transform: scale(0.95); }
+
+  .btn-op{
+    background-color: var(--op-soft);
+    color: var(--op);
+    border: 1px solid transparent;
+    transition: transform .08s ease, filter .15s ease;
+  }
+  .btn-op:hover{ filter: brightness(1.08); }
+  .btn-op:active{ transform: scale(0.95); }
+
+  .btn-danger{
+    background-color: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid transparent;
+    transition: transform .08s ease, filter .15s ease;
+  }
+  .btn-danger:hover{ filter: brightness(1.08); }
+  .btn-danger:active{ transform: scale(0.95); }
+
+  .btn-equals{
+    background-color: var(--accent);
+    color: var(--accent-ink);
+    border: 1px solid transparent;
+    transition: transform .08s ease, filter .15s ease;
+  }
+  .btn-equals:hover{ filter: brightness(1.08); }
+  .btn-equals:active{ transform: scale(0.95); }
+
+  .readout{
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+  }
+
+  .nav-item{
+    color: var(--ink-soft);
+    border: 1px solid transparent;
+  }
+  .nav-item:hover{
+    color: var(--ink);
+    background-color: var(--accent-soft);
+  }
+  .nav-item.active{
+    color: var(--accent);
+    background-color: var(--accent-soft);
+    border-color: var(--border);
+  }
+
+  .field{
+    background-color: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--ink);
+  }
+  .field:focus{
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .field.invalid{
+    border-color: var(--danger) !important;
+  }
+
+  ::selection{ background: var(--accent-soft); }
+
+  .tab-panel{
+    animation: fadeSlide .28s ease both;
+  }
+  @keyframes fadeSlide{
+    from{ opacity:0; transform: translateY(6px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .toggle-track{
+    background-color: var(--panel-2);
+    border: 1px solid var(--border);
+  }
+  .toggle-thumb{
+    background-color: var(--accent);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  html.dark .toggle-thumb{ transform: translateX(20px); }
+
+  select.field{
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238FA697' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+  }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .grid-glow{
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+
+  ::-webkit-scrollbar{ height: 6px; width: 6px; }
+  ::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 4px; }
+</style>
+</head>
+
+<body class="min-h-screen">
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+
+  <!-- Top bar -->
+  <header class="flex items-start justify-between gap-4 mb-6 sm:mb-10">
+    <div>
+      <p class="mono text-[11px] tracking-[0.25em] uppercase" style="color:var(--accent)">digits · bases · units</p>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">Maths Calculator</h1>
+    </div>
+
+    <button id="theme-toggle" aria-label="Toggle dark mode" class="shrink-0 flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-full toggle-track">
+      <svg id="icon-sun" class="w-4 h-4" style="color:var(--ink-soft)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <span class="w-9 h-5 rounded-full relative toggle-track">
+        <span class="toggle-thumb absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full"></span>
+      </span>
+      <svg id="icon-moon" class="w-4 h-4" style="color:var(--ink-soft)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </header>
+
+  <!-- Mobile top tabs -->
+  <nav class="flex md:hidden gap-2 mb-5 overflow-x-auto pb-1" aria-label="Calculator tools">
+    <button data-tab="arithmetic" class="nav-tab-btn nav-item active whitespace-nowrap px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="16" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="12" y1="16" x2="12" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+      Arithmetic
+    </button>
+    <button data-tab="base" class="nav-tab-btn nav-item whitespace-nowrap px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+      Base Converter
+    </button>
+    <button data-tab="unit" class="nav-tab-btn nav-item whitespace-nowrap px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
+      Unit Converter
+    </button>
+  </nav>
+
+  <div class="flex flex-col md:flex-row gap-6">
+
+    <!-- Sidebar (desktop) -->
+    <nav class="hidden md:flex md:flex-col gap-1.5 md:w-56 shrink-0" aria-label="Calculator tools">
+      <button data-tab="arithmetic" class="nav-tab-btn nav-item active text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="16" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="12" y1="16" x2="12" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+        <span>
+          Arithmetic
+          <span class="block text-[11px] font-normal" style="color:var(--ink-faint)">Standard equations</span>
+        </span>
+      </button>
+      <button data-tab="base" class="nav-tab-btn nav-item text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+        <span>
+          Base Converter
+          <span class="block text-[11px] font-normal" style="color:var(--ink-faint)">Dec · Bin · Oct · Hex</span>
+        </span>
+      </button>
+      <button data-tab="unit" class="nav-tab-btn nav-item text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
+        <span>
+          Unit Converter
+          <span class="block text-[11px] font-normal" style="color:var(--ink-faint)">Length &amp; weight</span>
+        </span>
+      </button>
+
+      <div class="mt-4 p-4 rounded-xl surface hidden lg:block">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color:var(--ink-faint)">Keyboard</p>
+        <p class="text-xs mt-2 leading-relaxed" style="color:var(--ink-soft)">
+          Numbers, <span class="mono">+ − × ÷</span>, <span class="mono">Enter</span> to solve, <span class="mono">Esc</span> to clear — works on the Arithmetic tab.
+        </p>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="flex-1 min-w-0">
+
+      <!-- ARITHMETIC -->
+      <section id="panel-arithmetic" class="tab-panel">
+        <div class="panel rounded-2xl p-5 sm:p-6 max-w-md mx-auto md:mx-0">
+          <div class="readout rounded-xl px-4 py-4 mb-4">
+            <div id="eq-preview" class="mono text-sm min-h-[1.25rem] text-right truncate" style="color:var(--ink-soft)">&nbsp;</div>
+            <div id="eq-result" class="mono text-4xl sm:text-5xl font-bold text-right mt-1 truncate">0</div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2.5">
+            <button class="calc-btn btn-danger rounded-xl py-3.5 text-sm font-bold" data-action="clear">AC</button>
+            <button class="calc-btn btn-danger rounded-xl py-3.5 text-lg font-bold" data-action="backspace" aria-label="Backspace">⌫</button>
+            <button class="calc-btn btn-op rounded-xl py-3.5 text-lg font-bold" data-action="percent">%</button>
+            <button class="calc-btn btn-op rounded-xl py-3.5 text-lg font-bold" data-op="/">÷</button>
+
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="7">7</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="8">8</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="9">9</button>
+            <button class="calc-btn btn-op rounded-xl py-3.5 text-lg font-bold" data-op="*">×</button>
+
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="4">4</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="5">5</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="6">6</button>
+            <button class="calc-btn btn-op rounded-xl py-3.5 text-lg font-bold" data-op="-">−</button>
+
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="1">1</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="2">2</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="3">3</button>
+            <button class="calc-btn btn-op rounded-xl py-3.5 text-lg font-bold" data-op="+">+</button>
+
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-base font-semibold mono" data-action="sign">±</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-num="0">0</button>
+            <button class="calc-btn btn-key rounded-xl py-3.5 text-lg font-semibold mono" data-action="dot">.</button>
+            <button class="calc-btn btn-equals rounded-xl py-3.5 text-lg font-bold" data-action="equals">=</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- BASE CONVERTER -->
+      <section id="panel-base" class="tab-panel hidden">
+        <div class="panel rounded-2xl p-5 sm:p-6 max-w-xl">
+          <p class="text-sm mb-5" style="color:var(--ink-soft)">Type in any field — the others update instantly. Only valid digits for each base are accepted.</p>
+
+          <div class="space-y-4">
+            <div>
+              <label for="dec-input" class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide mb-1.5" style="color:var(--ink-faint)">
+                Decimal <span class="mono normal-case text-[10px]">base 10</span>
+              </label>
+              <input id="dec-input" data-base="10" inputmode="numeric" autocomplete="off" placeholder="e.g. 255" class="base-field field mono w-full rounded-xl px-4 py-3 text-lg" />
+            </div>
+            <div>
+              <label for="bin-input" class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide mb-1.5" style="color:var(--ink-faint)">
+                Binary <span class="mono normal-case text-[10px]">base 2</span>
+              </label>
+              <input id="bin-input" data-base="2" inputmode="numeric" autocomplete="off" placeholder="e.g. 11111111" class="base-field field mono w-full rounded-xl px-4 py-3 text-lg" />
+            </div>
+            <div>
+              <label for="oct-input" class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide mb-1.5" style="color:var(--ink-faint)">
+                Octal <span class="mono normal-case text-[10px]">base 8</span>
+              </label>
+              <input id="oct-input" data-base="8" inputmode="numeric" autocomplete="off" placeholder="e.g. 377" class="base-field field mono w-full rounded-xl px-4 py-3 text-lg" />
+            </div>
+            <div>
+              <label for="hex-input" class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide mb-1.5" style="color:var(--ink-faint)">
+                Hexadecimal <span class="mono normal-case text-[10px]">base 16</span>
+              </label>
+              <input id="hex-input" data-base="16" autocomplete="off" placeholder="e.g. FF" class="base-field field mono w-full rounded-xl px-4 py-3 text-lg" />
+            </div>
+          </div>
+
+          <button id="base-clear" class="mt-5 text-xs font-semibold px-3 py-2 rounded-lg btn-danger">Clear all</button>
+        </div>
+      </section>
+
+      <!-- UNIT CONVERTER -->
+      <section id="panel-unit" class="tab-panel hidden">
+        <div class="panel rounded-2xl p-5 sm:p-6 max-w-xl">
+
+          <div class="inline-flex p-1 rounded-xl surface mb-6">
+            <button data-category="length" class="unit-cat-btn active text-sm font-semibold px-4 py-2 rounded-lg">Length</button>
+            <button data-category="weight" class="unit-cat-btn text-sm font-semibold px-4 py-2 rounded-lg">Weight</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-end">
+            <div>
+              <label for="unit-from-select" class="block text-xs font-semibold uppercase tracking-wide mb-1.5" style="color:var(--ink-faint)">From</label>
+              <select id="unit-from-select" class="field w-full rounded-xl px-3 py-3 text-sm mono"></select>
+              <input id="unit-from-value" type="text" inputmode="decimal" placeholder="0" class="field mono w-full rounded-xl px-4 py-3 text-lg mt-2" />
+            </div>
+
+            <button id="unit-swap" aria-label="Swap units" class="btn-key rounded-xl p-3 mb-[2px] mx-auto sm:mx-0 rotate-90 sm:rotate-0">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3 21 7 17 11"/><path d="M3 7h18"/><path d="M7 21 3 17 7 13"/><path d="M21 17H3"/></svg>
+            </button>
+
+            <div>
+              <label for="unit-to-select" class="block text-xs font-semibold uppercase tracking-wide mb-1.5" style="color:var(--ink-faint)">To</label>
+              <select id="unit-to-select" class="field w-full rounded-xl px-3 py-3 text-sm mono"></select>
+              <div id="unit-to-value" class="readout mono w-full rounded-xl px-4 py-3 text-lg mt-2 truncate">0</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="mt-10 text-center text-xs" style="color:var(--ink-faint)">
+    Built for quick, precise, everyday maths.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Theme ---------------- */
+  const root = document.documentElement;
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (prefersDark) root.classList.add('dark');
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    root.classList.toggle('dark');
+  });
+
+  /* ---------------- Tabs ---------------- */
+  let activeTab = 'arithmetic';
+  const tabButtons = document.querySelectorAll('.nav-tab-btn');
+  const panels = {
+    arithmetic: document.getElementById('panel-arithmetic'),
+    base: document.getElementById('panel-base'),
+    unit: document.getElementById('panel-unit'),
+  };
+
+  function setTab(tab){
+    activeTab = tab;
+    Object.keys(panels).forEach(key => {
+      panels[key].classList.toggle('hidden', key !== tab);
+    });
+    tabButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+  }
+
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => setTab(btn.dataset.tab));
+  });
+
+  /* ---------------- Arithmetic Calculator ---------------- */
+  let expr = '';
+  let justEvaluated = false;
+
+  const eqPreview = document.getElementById('eq-preview');
+  const eqResult = document.getElementById('eq-result');
+
+  function prettify(s){
+    return s
+      .replace(/\*/g, ' × ')
+      .replace(/\//g, ' ÷ ')
+      .replace(/\+/g, ' + ')
+      .replace(/(\d)-/g, '$1 − ')
+      .trim();
+  }
+
+  function safeEval(s){
+    if (!s) return null;
+    if (!/^[0-9+\-*/.() ]+$/.test(s)) return null;
+    try {
+      const val = Function('"use strict"; return (' + s + ')')();
+      if (typeof val === 'number' && isFinite(val)) return val;
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function roundClean(n){
+    const r = Math.round(n * 1e10) / 1e10;
+    return r;
+  }
+
+  function render(){
+    eqPreview.textContent = expr ? prettify(expr) : '\u00A0';
+    const live = safeEval(expr.replace(/[+\-*/.]$/, ''));
+    if (justEvaluated) {
+      eqResult.textContent = expr === '' ? '0' : expr;
+    } else if (live !== null) {
+      eqResult.textContent = String(roundClean(live));
+    } else if (expr === '') {
+      eqResult.textContent = '0';
+    }
+  }
+
+  function appendDigit(d){
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    expr += d;
+    render();
+  }
+
+  function appendOp(op){
+    if (justEvaluated) { justEvaluated = false; }
+    if (expr === '') {
+      if (op === '-') { expr = '-'; render(); }
+      return;
+    }
+    const last = expr[expr.length - 1];
+    if ('+-*/'.includes(last)) {
+      expr = expr.slice(0, -1) + op;
+    } else {
+      expr += op;
+    }
+    render();
+  }
+
+  function appendDot(){
+    if (justEvaluated) { expr = ''; justEvaluated = false; }
+    const parts = expr.split(/[+\-*/]/);
+    const lastNum = parts[parts.length - 1];
+    if (lastNum.includes('.')) return;
+    expr += lastNum === '' ? '0.' : '.';
+    render();
+  }
+
+  function backspace(){
+    if (justEvaluated) { expr = ''; justEvaluated = false; render(); return; }
+    expr = expr.slice(0, -1);
+    render();
+  }
+
+  function clearAll(){
+    expr = '';
+    justEvaluated = false;
+    render();
+  }
+
+  function toggleSign(){
+    const match = expr.match(/(-?\d+\.?\d*)$/);
+    if (!match) return;
+    const numStr = match[0];
+    const start = match.index;
+    const negated = numStr.startsWith('-') ? numStr.slice(1) : '-' + numStr;
+    expr = expr.slice(0, start) + negated;
+    render();
+  }
+
+  function percent(){
+    const match = expr.match(/(-?\d+\.?\d*)$/);
+    if (!match) return;
+    const numStr = match[0];
+    const start = match.index;
+    const val = roundClean(parseFloat(numStr) / 100);
+    expr = expr.slice(0, start) + val;
+    render();
+  }
+
+  function equals(){
+    const cleanExpr = expr.replace(/[+\-*/.]$/, '');
+    const val = safeEval(cleanExpr);
+    if (val === null) {
+      eqResult.textContent = 'Error';
+      eqPreview.textContent = prettify(expr) + ' =';
+      expr = '';
+      justEvaluated = false;
+      return;
+    }
+    eqPreview.textContent = prettify(cleanExpr) + ' =';
+    expr = String(roundClean(val));
+    justEvaluated = true;
+    render();
+  }
+
+  document.querySelectorAll('.calc-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.num !== undefined) appendDigit(btn.dataset.num);
+      else if (btn.dataset.op !== undefined) appendOp(btn.dataset.op);
+      else if (btn.dataset.action === 'clear') clearAll();
+      else if (btn.dataset.action === 'backspace') backspace();
+      else if (btn.dataset.action === 'sign') toggleSign();
+      else if (btn.dataset.action === 'percent') percent();
+      else if (btn.dataset.action === 'dot') appendDot();
+      else if (btn.dataset.action === 'equals') equals();
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (activeTab !== 'arithmetic') return;
+    if (e.key >= '0' && e.key <= '9') { appendDigit(e.key); e.preventDefault(); }
+    else if (e.key === '.') { appendDot(); e.preventDefault(); }
+    else if (e.key === '+' || e.key === '-' ) { appendOp(e.key); e.preventDefault(); }
+    else if (e.key === '*') { appendOp('*'); e.preventDefault(); }
+    else if (e.key === '/') { appendOp('/'); e.preventDefault(); }
+    else if (e.key === '%') { percent(); e.preventDefault(); }
+    else if (e.key === 'Enter' || e.key === '=') { equals(); e.preventDefault(); }
+    else if (e.key === 'Backspace') { backspace(); e.preventDefault(); }
+    else if (e.key === 'Escape') { clearAll(); e.preventDefault(); }
+  });
+
+  render();
+
+  /* ---------------- Base Converter ---------------- */
+  const baseFields = {
+    10: document.getElementById('dec-input'),
+    2: document.getElementById('bin-input'),
+    8: document.getElementById('oct-input'),
+    16: document.getElementById('hex-input'),
+  };
+  const validPattern = {
+    10: /[^0-9]/g,
+    2: /[^01]/g,
+    8: /[^0-7]/g,
+    16: /[^0-9a-fA-F]/g,
+  };
+  const digitsFor = {
+    2: '01',
+    8: '01234567',
+    10: '0123456789',
+    16: '0123456789abcdef',
+  };
+
+  function bigFromString(str, radix){
+    if (!str) return null;
+    const digits = digitsFor[radix];
+    let acc = 0n;
+    const bigRadix = BigInt(radix);
+    for (const ch of str.toLowerCase()) {
+      const idx = digits.indexOf(ch);
+      if (idx === -1) return null;
+      acc = acc * bigRadix + BigInt(idx);
+    }
+    return acc;
+  }
+
+  function bigToString(big, radix){
+    if (big === 0n) return '0';
+    const digits = digitsFor[radix];
+    const bigRadix = BigInt(radix);
+    let n = big;
+    let out = '';
+    while (n > 0n) {
+      out = digits[Number(n % bigRadix)] + out;
+      n = n / bigRadix;
+    }
+    return out;
+  }
+
+  function updateBaseFields(sourceRadix){
+    const field = baseFields[sourceRadix];
+    const raw = field.value;
+    if (raw === '') {
+      Object.keys(baseFields).forEach(r => { if (Number(r) !== sourceRadix) baseFields[r].value = ''; });
+      return;
+    }
+    const big = bigFromString(raw, sourceRadix);
+    if (big === null) return;
+    Object.keys(baseFields).forEach(r => {
+      const radix = Number(r);
+      if (radix !== sourceRadix) {
+        baseFields[radix].value = bigToString(big, radix);
+      }
+    });
+  }
+
+  Object.keys(baseFields).forEach(r => {
+    const radix = Number(r);
+    const field = baseFields[radix];
+    field.addEventListener('input', () => {
+      const cleaned = field.value.replace(validPattern[radix], '');
+      field.value = radix === 16 ? cleaned.toUpperCase() : cleaned;
+      updateBaseFields(radix);
+    });
+  });
+
+  document.getElementById('base-clear').addEventListener('click', () => {
+    Object.values(baseFields).forEach(f => f.value = '');
+  });
+
+  /* ---------------- Unit Converter ---------------- */
+  const unitData = {
+    length: {
+      base: 'meters',
+      units: [
+        { key: 'km', label: 'Kilometer (km)', factor: 1000 },
+        { key: 'm', label: 'Meter (m)', factor: 1 },
+        { key: 'cm', label: 'Centimeter (cm)', factor: 0.01 },
+        { key: 'mi', label: 'Mile (mi)', factor: 1609.344 },
+        { key: 'ft', label: 'Foot (ft)', factor: 0.3048 },
+        { key: 'in', label: 'Inch (in)', factor: 0.0254 },
+      ],
+      defaultFrom: 'km',
+      defaultTo: 'mi',
+    },
+    weight: {
+      base: 'grams',
+      units: [
+        { key: 'kg', label: 'Kilogram (kg)', factor: 1000 },
+        { key: 'g', label: 'Gram (g)', factor: 1 },
+        { key: 'lb', label: 'Pound (lb)', factor: 453.59237 },
+        { key: 'oz', label: 'Ounce (oz)', factor: 28.349523 },
+      ],
+      defaultFrom: 'kg',
+      defaultTo: 'lb',
+    },
+  };
+
+  let unitCategory = 'length';
+  const fromSelect = document.getElementById('unit-from-select');
+  const toSelect = document.getElementById('unit-to-select');
+  const fromValue = document.getElementById('unit-from-value');
+  const toValue = document.getElementById('unit-to-value');
+
+  function populateUnitSelects(){
+    const cat = unitData[unitCategory];
+    fromSelect.innerHTML = cat.units.map(u => `<option value="${u.key}">${u.label}</option>`).join('');
+    toSelect.innerHTML = cat.units.map(u => `<option value="${u.key}">${u.label}</option>`).join('');
+    fromSelect.value = cat.defaultFrom;
+    toSelect.value = cat.defaultTo;
+  }
+
+  function formatNum(n){
+    if (!isFinite(n)) return '—';
+    if (Math.abs(n) < 1e-9) return '0';
+    const rounded = Math.round(n * 1e6) / 1e6;
+    return rounded.toString();
+  }
+
+  function computeUnitConversion(){
+    const cat = unitData[unitCategory];
+    const fromUnit = cat.units.find(u => u.key === fromSelect.value);
+    const toUnit = cat.units.find(u => u.key === toSelect.value);
+    const raw = fromValue.value.trim();
+    if (raw === '' || isNaN(Number(raw))) {
+      toValue.textContent = '0';
+      return;
+    }
+    const val = Number(raw);
+    const inBase = val * fromUnit.factor;
+    const result = inBase / toUnit.factor;
+    toValue.textContent = formatNum(result);
+  }
+
+  document.querySelectorAll('.unit-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      unitCategory = btn.dataset.category;
+      document.querySelectorAll('.unit-cat-btn').forEach(b => b.classList.toggle('active', b === btn));
+      populateUnitSelects();
+      fromValue.value = '';
+      toValue.textContent = '0';
+    });
+  });
+
+  fromSelect.addEventListener('change', computeUnitConversion);
+  toSelect.addEventListener('change', computeUnitConversion);
+  fromValue.addEventListener('input', () => {
+    fromValue.value = fromValue.value.replace(/[^0-9.\-]/g, '');
+    computeUnitConversion();
+  });
+
+  document.getElementById('unit-swap').addEventListener('click', () => {
+    const f = fromSelect.value, t = toSelect.value;
+    fromSelect.value = t;
+    toSelect.value = f;
+    computeUnitConversion();
+  });
+
+  populateUnitSelects();
+
+})();
+</script>
+
+<style>
+  .unit-cat-btn{ color: var(--ink-soft); }
+  .unit-cat-btn.active{ background-color: var(--panel); color: var(--accent); box-shadow: var(--shadow); }
+</style>
+
+</body>
+</html>
